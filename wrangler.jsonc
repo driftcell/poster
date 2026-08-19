@@ -25,6 +25,7 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
+	"routes": [{ "pattern": "poster.driftcell.dev", "custom_domain": true }],
 	"d1_databases": [
 		{
 			"binding": "DB",

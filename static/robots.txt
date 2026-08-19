@@ -2,4 +2,4 @@
 User-agent: *
 Disallow: /admin
 
-Sitemap: https://poster.driftcell.workers.dev/sitemap.xml
+Sitemap: https://poster.driftcell.dev/sitemap.xml
