@@ -6,7 +6,13 @@ declare global {
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
-		// interface Platform {}
+		interface Platform {
+			/** Cloudflare Workers 绑定，类型由 wrangler types 生成（worker-configuration.d.ts） */
+			env: Env;
+			ctx: ExecutionContext;
+			caches: CacheStorage;
+			cf?: IncomingRequestCfProperties;
+		}
 	}
 }
 
