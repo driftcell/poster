@@ -8,6 +8,7 @@ import {
 	type IngestMessage
 } from './lib';
 import { autoModerate } from './moderate';
+import { purgePublicCache, type CacheStore } from '../src/lib/server/cache';
 import type { AttachmentMeta } from '../src/lib/types';
 
 // 只收图片附件：跳过小图标/签名图，限制数量和单个体积
@@ -17,6 +18,9 @@ const MIN_IMAGE_BYTES = 20 * 1024;
 
 // 每个发件人（按哈希）的每日投递上限，防刷屏
 const DAILY_LIMITS = { letters: 3, replies: 10 } as const;
+
+// 公开站点 origin：queue 上下文没有 request，purge 缓存拼 URL 用常量
+const SITE_ORIGIN = 'https://poster.driftcell.dev';
 
 /**
  * Queue 消费端：取 R2 原件 → 解析 MIME → 存图片附件 → 发件人哈希 → AI 审核 → 写 D1。
@@ -109,6 +113,12 @@ async function processMessage(env: Env, payload: IngestMessage): Promise<void> {
 				attachmentsJson
 			)
 			.run();
+		if (status === 'approved') {
+			await purgeAfterPublish([
+				`/letters/${target.letterId}`,
+				`/letters/${target.letterId}/atom.xml`
+			]);
+		}
 		return;
 	}
 
@@ -131,6 +141,9 @@ async function processMessage(env: Env, payload: IngestMessage): Promise<void> {
 			attachmentsJson
 		)
 		.run();
+	if (status === 'approved') {
+		await purgeAfterPublish(['/', '/atom.xml', '/sitemap.xml', `/letters/${id}`]);
+	}
 }
 
 /** 解析回信地址 token：先查信件，查不到再查回信（回复回信） */
@@ -182,6 +195,19 @@ async function saveImageAttachments(
 		index++;
 	}
 	return metas;
+}
+
+/**
+ * AI 自动通过后主动失效公开页面的边缘缓存。
+ * best-effort：失败只 log，不值得让队列消息重试（缓存有 max-age 兜底）。
+ */
+async function purgeAfterPublish(paths: string[]): Promise<void> {
+	try {
+		// 运行时 Workers 的 caches 一定有 default（DOM 类型里没有声明，断言一下）
+		await purgePublicCache(caches as unknown as CacheStore, SITE_ORIGIN, paths);
+	} catch (error) {
+		console.warn('failed to purge public cache', error);
+	}
 }
 
 /** 按发件人哈希统计最近 24h 投递量是否超限（表名是内部常量，无注入风险） */

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import CopyButton from '$lib/CopyButton.svelte';
 	import LocalTime from '$lib/LocalTime.svelte';
 	import { d1ToIso, excerpt } from '$lib/text';
 	import { pseudonymFor } from '$lib/pseudonym';
@@ -76,11 +77,17 @@
 	{/if}
 </article>
 
-<aside class="reply-box">
-	想回复这封信？发邮件到
-	<a class="reply-address" href="mailto:{data.replyAddress}">{data.replyAddress}</a>
-	，通过审核后会显示在下面。
-</aside>
+<details class="reply-box">
+	<summary>回复这封信</summary>
+	<div class="reply-content">
+		<p>发邮件到这个地址，通过审核后会显示在本页：</p>
+		<p class="address-row">
+			<a class="address" href="mailto:{data.replyAddress}">{data.replyAddress}</a><CopyButton
+				text={data.replyAddress}
+			/>
+		</p>
+	</div>
+</details>
 
 {#if data.replies.length > 0}
 	<section class="replies">
@@ -116,7 +123,7 @@
 					<p class="meta reply-via">
 						回复这条：<a href="mailto:poster+{reply.reply_token}@driftcell.dev"
 							>poster+{reply.reply_token}@driftcell.dev</a
-						>
+						><CopyButton text="poster+{reply.reply_token}@driftcell.dev" />
 					</p>
 				{/if}
 			</article>
@@ -181,15 +188,76 @@
 	}
 	.reply-box {
 		margin: 1.5rem 0 2rem;
-		padding: 1rem 1.25rem;
 		background: #f0f9ff;
 		border: 1px dashed #7dd3fc;
 		border-radius: 0.75rem;
 		font-size: 0.9375rem;
 	}
-	.reply-address {
+	.reply-box summary {
+		list-style: none;
+		padding: 0.75rem 1.25rem;
+		cursor: pointer;
+		text-align: center;
+		color: #0369a1;
+		border-radius: 0.75rem;
+		user-select: none;
+		transition: background-color 0.15s ease;
+	}
+	.reply-box summary::-webkit-details-marker {
+		display: none;
+	}
+	.reply-box summary::after {
+		content: '';
+		display: inline-block;
+		margin-left: 0.375rem;
+		width: 0.45em;
+		height: 0.45em;
+		border-right: 1.5px solid currentColor;
+		border-bottom: 1.5px solid currentColor;
+		transform: rotate(45deg) translateY(-0.125em);
+		transition: transform 0.15s ease;
+	}
+	.reply-box[open] summary::after {
+		transform: rotate(225deg) translateY(-0.05em);
+	}
+	.reply-box summary:hover {
+		background: #e0f2fe;
+	}
+	.reply-box[open] summary {
+		border-bottom: 1px dashed #bae6fd;
+		border-radius: 0.75rem 0.75rem 0 0;
+	}
+	.reply-content {
+		padding: 0.875rem 1.25rem;
+	}
+	.reply-content p {
+		margin: 0 0 0.5rem;
+	}
+	.reply-content p:last-child {
+		margin-bottom: 0;
+	}
+	.address-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.address {
 		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 		font-size: 0.875em;
+		word-break: break-all;
+	}
+	.reply-via {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.375rem;
+		margin: 0.75rem 0 0;
+		font-size: 0.8125rem;
+	}
+	.reply-via a {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		word-break: break-all;
 	}
 	.replies h2 {
 		margin: 0 0 0.5rem;
@@ -226,10 +294,6 @@
 	}
 	.reply .body p {
 		margin-bottom: 1em;
-	}
-	.reply-via {
-		margin: 0.75rem 0 0;
-		font-size: 0.8125rem;
 	}
 	@media (max-width: 36rem) {
 		.letter {

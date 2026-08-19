@@ -78,7 +78,7 @@ async function deleteReplyDeep(env: Env, id: string): Promise<void> {
 
 /** 信件公开内容变更后，清除相关页面的边缘缓存 */
 async function purgeLetterPaths(platform: App.Platform, origin: string, letterId: string) {
-	await purgePublicCache(platform, origin, [
+	await purgePublicCache(platform.caches, origin, [
 		'/',
 		'/atom.xml',
 		'/sitemap.xml',

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import CopyButton from '$lib/CopyButton.svelte';
 	import LocalTime from '$lib/LocalTime.svelte';
 	import { pseudonymFor } from '$lib/pseudonym';
 	import { excerpt } from '$lib/text';
@@ -16,7 +17,13 @@
 </svelte:head>
 
 <aside class="cta">
-	给 <a href="mailto:poster@driftcell.dev">poster@driftcell.dev</a> 写一封邮件，通过审核后会出现在这里。
+	给
+	<span class="address-row">
+		<a class="address" href="mailto:poster@driftcell.dev">poster@driftcell.dev</a><CopyButton
+			text="poster@driftcell.dev"
+		/>
+	</span>
+	写一封邮件（主题可留空），通过审核后会出现在这里。
 </aside>
 
 {#if data.letters.length === 0}
@@ -101,6 +108,18 @@
 		border: 1px dashed #7dd3fc;
 		border-radius: 0.75rem;
 		font-size: 0.9375rem;
+	}
+	.address-row {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		/* 行内 flex 上下会略高，压一点保持行距 */
+		margin: -0.125rem 0;
+		vertical-align: middle;
+	}
+	.address {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.875em;
 	}
 	.empty {
 		color: #6b7280;
