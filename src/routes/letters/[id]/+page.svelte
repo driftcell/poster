@@ -54,6 +54,14 @@
 
 	<p class="body">{data.letter.body_text}</p>
 
+	{#if data.letter.attachments.length > 0}
+		<div class="attachments">
+			{#each data.letter.attachments as attachment (attachment.key)}
+				<img src="/attachments/{attachment.key}" alt={attachment.filename} loading="lazy" />
+			{/each}
+		</div>
+	{/if}
+
 	<aside class="reply-box">
 		想回复这封信？发邮件到
 		<a href="mailto:{data.replyAddress}">{data.replyAddress}</a>
@@ -77,6 +85,13 @@
 					<h3>{reply.subject}</h3>
 				{/if}
 				<p class="body">{reply.body_text}</p>
+				{#if reply.attachments.length > 0}
+					<div class="attachments">
+						{#each reply.attachments as attachment (attachment.key)}
+							<img src="/attachments/{attachment.key}" alt={attachment.filename} loading="lazy" />
+						{/each}
+					</div>
+				{/if}
 				{#if reply.reply_token}
 					<p class="meta">
 						回复这条：<a href="mailto:poster+{reply.reply_token}@driftcell.dev"
@@ -102,6 +117,19 @@
 	.body {
 		white-space: pre-wrap;
 		word-break: break-word;
+	}
+	.attachments {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin: 0.75rem 0;
+	}
+	.attachments img {
+		max-width: 100%;
+		max-height: 24rem;
+		border-radius: 0.5rem;
+		border: 1px solid #e5e7eb;
+		object-fit: contain;
 	}
 	.reply-box {
 		margin: 2rem 0;

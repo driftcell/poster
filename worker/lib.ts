@@ -69,3 +69,10 @@ export function stripHtml(html: string): string {
 		.replace(/\n{3,}/g, '\n\n')
 		.trim();
 }
+
+/** 附件文件名消毒：只保留安全字符，防路径穿越 */
+export function sanitizeFilename(name: string): string {
+	const base = name.split(/[\\/]/).pop() ?? '';
+	const clean = base.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/^\.+/, '');
+	return clean || 'file';
+}

@@ -1,11 +1,23 @@
 <script lang="ts">
 	import LocalTime from '$lib/LocalTime.svelte';
 	import { pseudonymFor } from '$lib/pseudonym';
+	import { parseAttachments } from '$lib/types';
 
 	let { data } = $props();
 
 	const shortHash = (hash: string) => hash.slice(0, 12);
 </script>
+
+{#snippet thumbs(attachmentsJson: string)}
+	{@const attachments = parseAttachments(attachmentsJson)}
+	{#if attachments.length > 0}
+		<div class="thumbs">
+			{#each attachments as attachment (attachment.key)}
+				<img src="/attachments/{attachment.key}" alt={attachment.filename} loading="lazy" />
+			{/each}
+		</div>
+	{/if}
+{/snippet}
 
 <svelte:head>
 	<title>审核 · Poster 邮局</title>
@@ -28,6 +40,7 @@
 				<p class="note">AI 审核：{letter.review_note}</p>
 			{/if}
 			<p class="body">{letter.body_text}</p>
+			{@render thumbs(letter.attachments)}
 			<form method="POST">
 				<input type="hidden" name="id" value={letter.id} />
 				<button type="submit" class="approve" formaction="?/approveLetter">通过</button>
@@ -56,6 +69,7 @@
 				<p class="note">AI 审核：{reply.review_note}</p>
 			{/if}
 			<p class="body">{reply.body_text}</p>
+			{@render thumbs(reply.attachments)}
 			<form method="POST">
 				<input type="hidden" name="id" value={reply.id} />
 				<button type="submit" class="approve" formaction="?/approveReply">通过</button>
@@ -153,6 +167,17 @@
 		white-space: pre-wrap;
 		word-break: break-word;
 		margin: 0.75rem 0;
+	}
+	.thumbs {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin: 0 0 0.75rem;
+	}
+	.thumbs img {
+		max-height: 8rem;
+		border-radius: 0.375rem;
+		border: 1px solid #e5e7eb;
 	}
 	form {
 		display: flex;

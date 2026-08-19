@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import { purgePublicCache } from '$lib/server/cache';
+import { parseAttachments } from '$lib/types';
 import {
 	getReplyLetterId,
 	listPendingLetters,
@@ -28,29 +29,35 @@ function getId(formData: FormData): string | null {
 	return typeof id === 'string' && id ? id : null;
 }
 
-/** 删除信件：连带删 R2 原件、所有回信的 R2 原件和回信行 */
+/** 收集行的 R2 key：原始邮件 + 全部附件 */
+function r2KeysOf(row: { r2_key: string; attachments: string }): string[] {
+	return [row.r2_key, ...parseAttachments(row.attachments).map((a) => a.key)];
+}
+
+/** 删除信件：连带删 R2 原件与附件、所有回信的 R2 对象和回信行 */
 async function deleteLetterDeep(env: Env, id: string): Promise<void> {
-	const letter = await env.DB.prepare('SELECT r2_key FROM letters WHERE id = ?1')
+	const letter = await env.DB.prepare('SELECT r2_key, attachments FROM letters WHERE id = ?1')
 		.bind(id)
-		.first<{ r2_key: string }>();
+		.first<{ r2_key: string; attachments: string }>();
 	if (!letter) return;
-	const replies = await env.DB.prepare('SELECT r2_key FROM replies WHERE letter_id = ?1')
+	const replies = await env.DB.prepare('SELECT r2_key, attachments FROM replies WHERE letter_id = ?1')
 		.bind(id)
-		.all<{ r2_key: string }>();
-	await Promise.all([letter, ...replies.results].map((row) => env.RAW_EMAILS.delete(row.r2_key)));
+		.all<{ r2_key: string; attachments: string }>();
+	const keys = [letter, ...replies.results].flatMap(r2KeysOf);
+	await Promise.all(keys.map((key) => env.RAW_EMAILS.delete(key)));
 	await env.DB.batch([
 		env.DB.prepare('DELETE FROM replies WHERE letter_id = ?1').bind(id),
 		env.DB.prepare('DELETE FROM letters WHERE id = ?1').bind(id)
 	]);
 }
 
-/** 删除回信：连带删 R2 原件 */
+/** 删除回信：连带删 R2 原件与附件 */
 async function deleteReplyDeep(env: Env, id: string): Promise<void> {
-	const reply = await env.DB.prepare('SELECT r2_key FROM replies WHERE id = ?1')
+	const reply = await env.DB.prepare('SELECT r2_key, attachments FROM replies WHERE id = ?1')
 		.bind(id)
-		.first<{ r2_key: string }>();
+		.first<{ r2_key: string; attachments: string }>();
 	if (!reply) return;
-	await env.RAW_EMAILS.delete(reply.r2_key);
+	await Promise.all(r2KeysOf(reply).map((key) => env.RAW_EMAILS.delete(key)));
 	await env.DB.prepare('DELETE FROM replies WHERE id = ?1').bind(id).run();
 }
 
