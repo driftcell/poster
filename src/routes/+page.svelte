@@ -27,14 +27,14 @@
 			<li>
 				<a href={resolve('/letters/[id]', { id: letter.id })}>
 					<h2>{letter.subject || '（无主题）'}</h2>
+					{#if letter.body_text}
+						<p class="excerpt">{excerpt(letter.body_text)}</p>
+					{/if}
+					<p class="byline">
+						<span class="author">{pseudonymFor(letter.sender_hash)}</span>
+						<LocalTime time={letter.published_at ?? letter.created_at} seconds={false} />
+					</p>
 				</a>
-				{#if letter.body_text}
-					<p class="excerpt">{excerpt(letter.body_text)}</p>
-				{/if}
-				<p class="byline">
-					<span class="author">{pseudonymFor(letter.sender_hash)}</span> ·
-					<LocalTime time={letter.published_at ?? letter.created_at} />
-				</p>
 			</li>
 		{/each}
 	</ul>
@@ -47,45 +47,59 @@
 		margin: 0;
 	}
 	.letters li {
-		padding: 1.25rem 0;
-		border-bottom: 1px solid #e5e7eb;
+		border-bottom: 1px solid #e5e2dc;
 	}
 	.letters li:last-child {
 		border-bottom: none;
 	}
 	.letters a {
+		display: block;
+		padding: 1.25rem 0.75rem;
+		margin: 0 -0.75rem;
+		border-radius: 0.5rem;
 		text-decoration: none;
 		color: inherit;
+		transition: background-color 0.15s ease;
+	}
+	.letters a:hover {
+		background: #f0ede7;
 	}
 	.letters a:hover h2 {
 		color: #0369a1;
 	}
 	h2 {
-		margin: 0 0 0.5rem;
+		margin: 0 0 0.375rem;
 		font-size: 1.25rem;
+		line-height: 1.5;
+		text-wrap: balance;
+		transition: color 0.15s ease;
 	}
 	.excerpt {
-		margin: 0 0 0.5rem;
+		margin: 0 0 0.625rem;
 		color: #4b5563;
-	}
-	.letters :global(time) {
-		font-size: 0.875rem;
-		color: #9ca3af;
+		font-size: 0.9375rem;
 	}
 	.byline {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
 		margin: 0;
-		font-size: 0.875rem;
+		font-size: 0.8125rem;
 		color: #9ca3af;
 	}
 	.author {
-		color: #6b7280;
+		padding: 0.0625rem 0.625rem;
+		background: #eef2f7;
+		border: 1px solid #dde4ee;
+		border-radius: 999px;
+		color: #475569;
 	}
 	.cta {
 		margin: 0 0 1.5rem;
-		padding: 0.875rem 1rem;
+		padding: 0.875rem 1.25rem;
 		background: #f0f9ff;
-		border: 1px solid #bae6fd;
-		border-radius: 0.5rem;
+		border: 1px dashed #7dd3fc;
+		border-radius: 0.75rem;
 		font-size: 0.9375rem;
 	}
 	.empty {

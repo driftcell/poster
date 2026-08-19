@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	hashSender,
 	normalizeEmail,
+	pickBodyText,
 	replyTokenFor,
 	routeRecipient,
 	sanitizeFilename,
@@ -80,6 +81,43 @@ describe('stripHtml', () => {
 
 	it('decodes common entities', () => {
 		expect(stripHtml('a &amp; b &lt;c&gt;')).toBe('a & b <c>');
+	});
+
+	it('turns div paragraphs into line breaks', () => {
+		expect(stripHtml('<div>第一段</div><div>第二段<br></div><div>第三段</div>')).toBe(
+			'第一段\n第二段\n\n第三段'
+		);
+	});
+
+	it('collapses inline whitespace and trims each line', () => {
+		expect(stripHtml('<p>  你好，\t 陌生人。  </p>')).toBe('你好， 陌生人。');
+	});
+});
+
+describe('pickBodyText', () => {
+	it('prefers text/plain when it has real line breaks', () => {
+		expect(pickBodyText('第一段\n\n第二段', '<div>ignored</div>')).toBe('第一段\n\n第二段');
+	});
+
+	it('falls back to HTML when text/plain is flattened to one line (iCloud Webmail)', () => {
+		const flattened = '你好，陌生人。 欢迎来到 Poster 邮局。 工作方式大概是：';
+		const html =
+			'<div>你好，陌生人。</div><div>欢迎来到 Poster 邮局。</div><div>工作方式大概是：</div>';
+		expect(pickBodyText(flattened, html)).toBe(
+			'你好，陌生人。\n欢迎来到 Poster 邮局。\n工作方式大概是：'
+		);
+	});
+
+	it('ignores a trailing newline when judging whether plain text has structure', () => {
+		expect(pickBodyText('一整段话\n', '<div>第一段</div><div>第二段</div>')).toBe('第一段\n第二段');
+	});
+
+	it('uses text/plain when there is no HTML part', () => {
+		expect(pickBodyText('纯文本', undefined)).toBe('纯文本');
+	});
+
+	it('returns empty string when both parts are missing', () => {
+		expect(pickBodyText(undefined, undefined)).toBe('');
 	});
 });
 

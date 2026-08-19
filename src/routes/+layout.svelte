@@ -32,15 +32,37 @@
 	:global(*) {
 		box-sizing: border-box;
 	}
+	:global(html) {
+		/* 中文标点悬挂，段首的引号/括号不挤压文本框 */
+		hanging-punctuation: first allow-end;
+	}
 	:global(body) {
 		margin: 0;
 		font-family:
 			system-ui,
 			-apple-system,
+			'Segoe UI',
+			Roboto,
+			'PingFang SC',
+			'Hiragino Sans GB',
+			'Microsoft YaHei',
+			'Noto Sans CJK SC',
 			sans-serif;
-		line-height: 1.6;
+		font-size: 1.0625rem;
+		line-height: 1.8;
 		color: #1f2328;
-		background: #fff;
+		background: #f6f5f2;
+	}
+	:global(::selection) {
+		background: #bae6fd;
+	}
+	:global(:focus-visible) {
+		outline: 2px solid #0369a1;
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
+	:global(a) {
+		color: #0369a1;
 	}
 	.container {
 		max-width: 42rem;
@@ -53,7 +75,7 @@
 		align-items: baseline;
 		padding-bottom: 1rem;
 		margin-bottom: 1.5rem;
-		border-bottom: 1px solid #e5e7eb;
+		border-bottom: 1px solid #e5e2dc;
 	}
 	.brand {
 		font-size: 1.25rem;

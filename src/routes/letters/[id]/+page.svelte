@@ -10,6 +10,9 @@
 	// 回信按时间升序，编号即楼层号；parent_reply_id 指向同列表里的楼层
 	const floorOf = (replyId: string) => data.replies.findIndex((r) => r.id === replyId) + 1;
 
+	/** 空行分段；段内的单个换行交给 CSS pre-line 渲染为换行 */
+	const paragraphs = (text: string) => text.split(/\n{2,}/).filter((p) => p.trim());
+
 	const title = $derived(data.letter.subject || '（无主题）');
 	const description = $derived(excerpt(data.letter.body_text));
 	const publishedIso = $derived(d1ToIso(data.letter.published_at ?? data.letter.created_at));
@@ -48,17 +51,21 @@
 	{@html jsonLdTag}
 </svelte:head>
 
-<article>
+<article class="letter">
 	<header>
 		<h1>{data.letter.subject || '（无主题）'}</h1>
 		<p class="meta">
-			{pseudonymFor(data.letter.sender_hash)} ·
-			<LocalTime time={data.letter.published_at ?? data.letter.created_at} />
+			<span class="author">{pseudonymFor(data.letter.sender_hash)}</span>
+			<LocalTime time={data.letter.published_at ?? data.letter.created_at} seconds={false} />
 			· <a href={resolve('/letters/[id]/atom.xml', { id: data.letter.id })}>订阅回信</a>
 		</p>
 	</header>
 
-	<p class="body">{data.letter.body_text}</p>
+	<div class="body">
+		{#each paragraphs(data.letter.body_text) as paragraph, i (i)}
+			<p>{paragraph}</p>
+		{/each}
+	</div>
 
 	{#if data.letter.attachments.length > 0}
 		<div class="attachments">
@@ -67,13 +74,13 @@
 			{/each}
 		</div>
 	{/if}
-
-	<aside class="reply-box">
-		想回复这封信？发邮件到
-		<a href="mailto:{data.replyAddress}">{data.replyAddress}</a>
-		，通过审核后会显示在下面。
-	</aside>
 </article>
+
+<aside class="reply-box">
+	想回复这封信？发邮件到
+	<a class="reply-address" href="mailto:{data.replyAddress}">{data.replyAddress}</a>
+	，通过审核后会显示在下面。
+</aside>
 
 {#if data.replies.length > 0}
 	<section class="replies">
@@ -81,16 +88,23 @@
 		{#each data.replies as reply, i (reply.id)}
 			<article class="reply" id={reply.id}>
 				<p class="meta">
-					#{i + 1} · {pseudonymFor(reply.sender_hash)}
+					<span class="floor">#{i + 1}</span>
+					<span class="author">{pseudonymFor(reply.sender_hash)}</span>
 					{#if reply.parent_reply_id && floorOf(reply.parent_reply_id) > 0}
-						· 回复 <a href="#{reply.parent_reply_id}">#{floorOf(reply.parent_reply_id)}</a>
+						<a class="quote" href="#{reply.parent_reply_id}"
+							>回复 #{floorOf(reply.parent_reply_id)}</a
+						>
 					{/if}
-					· <LocalTime time={reply.published_at ?? reply.created_at} />
+					<LocalTime time={reply.published_at ?? reply.created_at} seconds={false} />
 				</p>
 				{#if reply.subject}
 					<h3>{reply.subject}</h3>
 				{/if}
-				<p class="body">{reply.body_text}</p>
+				<div class="body">
+					{#each paragraphs(reply.body_text) as paragraph, j (j)}
+						<p>{paragraph}</p>
+					{/each}
+				</div>
 				{#if reply.attachments.length > 0}
 					<div class="attachments">
 						{#each reply.attachments as attachment (attachment.key)}
@@ -99,7 +113,7 @@
 					</div>
 				{/if}
 				{#if reply.reply_token}
-					<p class="meta">
+					<p class="meta reply-via">
 						回复这条：<a href="mailto:poster+{reply.reply_token}@driftcell.dev"
 							>poster+{reply.reply_token}@driftcell.dev</a
 						>
@@ -111,53 +125,116 @@
 {/if}
 
 <style>
+	.letter {
+		background: #fffdf8;
+		border: 1px solid #e9e5da;
+		border-radius: 0.75rem;
+		padding: 2rem 2rem 1.5rem;
+		box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+	}
 	h1 {
-		margin: 0 0 0.25rem;
+		margin: 0 0 0.75rem;
 		font-size: 1.5rem;
+		line-height: 1.4;
+		text-wrap: balance;
 	}
 	.meta {
-		margin: 0 0 1.5rem;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.375rem 0.5rem;
+		margin: 0 0 1.75rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px dashed #e9e5da;
 		font-size: 0.875rem;
 		color: #9ca3af;
 	}
-	.body {
-		white-space: pre-wrap;
+	.author {
+		display: inline-block;
+		padding: 0.125rem 0.625rem;
+		background: #eef2f7;
+		border: 1px solid #dde4ee;
+		border-radius: 999px;
+		font-size: 0.8125rem;
+		color: #475569;
+	}
+	.body p {
+		margin: 0 0 1.25em;
+		white-space: pre-line;
 		word-break: break-word;
+	}
+	.body p:last-child {
+		margin-bottom: 0;
 	}
 	.attachments {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.75rem;
-		margin: 0.75rem 0;
+		margin: 1.25rem 0 0.5rem;
 	}
 	.attachments img {
 		max-width: 100%;
 		max-height: 24rem;
 		border-radius: 0.5rem;
-		border: 1px solid #e5e7eb;
+		border: 1px solid #e9e5da;
 		object-fit: contain;
 	}
 	.reply-box {
-		margin: 2rem 0;
-		padding: 1rem;
+		margin: 1.5rem 0 2rem;
+		padding: 1rem 1.25rem;
 		background: #f0f9ff;
-		border: 1px solid #bae6fd;
-		border-radius: 0.5rem;
+		border: 1px dashed #7dd3fc;
+		border-radius: 0.75rem;
 		font-size: 0.9375rem;
 	}
-	.replies {
-		margin-top: 2rem;
+	.reply-address {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.875em;
+	}
+	.replies h2 {
+		margin: 0 0 0.5rem;
+		font-size: 1.125rem;
 	}
 	.reply {
-		padding: 1rem 0;
-		border-top: 1px solid #e5e7eb;
+		padding: 1.25rem 0;
+		border-top: 1px solid #e5e2dc;
+	}
+	.reply .meta {
+		margin: 0 0 0.75rem;
+		padding-bottom: 0;
+		border-bottom: none;
+	}
+	.floor {
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: #0369a1;
+	}
+	.quote {
+		padding: 0 0.5rem;
+		background: #f0f9ff;
+		border-radius: 999px;
+		font-size: 0.8125rem;
+		text-decoration: none;
+	}
+	.quote:hover {
+		background: #e0f2fe;
 	}
 	.reply h3 {
 		margin: 0 0 0.5rem;
 		font-size: 1rem;
 	}
-	.reply :global(time) {
-		font-size: 0.875rem;
-		color: #9ca3af;
+	.reply .body p {
+		margin-bottom: 1em;
+	}
+	.reply-via {
+		margin: 0.75rem 0 0;
+		font-size: 0.8125rem;
+	}
+	@media (max-width: 36rem) {
+		.letter {
+			padding: 1.25rem 1.25rem 1rem;
+			border-radius: 0.5rem;
+		}
 	}
 </style>

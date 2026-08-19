@@ -1,6 +1,12 @@
 import PostalMime from 'postal-mime';
 import type { Attachment } from 'postal-mime';
-import { hashSender, replyTokenFor, sanitizeFilename, stripHtml, type IngestMessage } from './lib';
+import {
+	hashSender,
+	pickBodyText,
+	replyTokenFor,
+	sanitizeFilename,
+	type IngestMessage
+} from './lib';
 import { autoModerate } from './moderate';
 import type { AttachmentMeta } from '../src/lib/types';
 
@@ -43,7 +49,7 @@ async function processMessage(env: Env, payload: IngestMessage): Promise<void> {
 	const parsed = await PostalMime.parse(await object.arrayBuffer());
 	const senderHash = await hashSender(env.HASH_SALT, payload.from);
 	const subject = parsed.subject ?? '';
-	const bodyText = parsed.text ?? (parsed.html ? stripHtml(parsed.html) : '');
+	const bodyText = pickBodyText(parsed.text, parsed.html);
 	// Queue 至少一次投递，用 RFC Message-ID 去重（缺失时无法去重，插入即可）
 	const messageId = parsed.messageId ?? null;
 

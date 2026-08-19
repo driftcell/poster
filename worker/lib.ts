@@ -52,7 +52,19 @@ export async function replyTokenFor(secret: string, letterId: string): Promise<s
 	return hex.slice(0, 16);
 }
 
-/** 邮件没有 text/plain 时的兜底：从 html 提取可读文本 */
+/**
+ * 从解析结果挑选正文。
+ * 有的发件端（如 iCloud Webmail）会把 text/plain 压成一个 format=flowed 逻辑行，
+ * 换行全部丢成空格，但 HTML 部分仍保留段落结构——这时改从 HTML 提取。
+ * text/plain 自带真实换行时优先用它（更干净，没有 HTML 噪音）。
+ */
+export function pickBodyText(text: string | undefined, html: string | undefined): string {
+	const plain = text ?? '';
+	if (plain.trim().includes('\n') || !html) return plain;
+	return stripHtml(html) || plain;
+}
+
+/** 邮件没有 text/plain（或纯文本被压平）时：从 html 提取可读文本，保留段落换行 */
 export function stripHtml(html: string): string {
 	return html
 		.replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -66,6 +78,9 @@ export function stripHtml(html: string): string {
 		.replace(/&quot;/g, '"')
 		.replace(/&#39;/g, "'")
 		.replace(/&amp;/g, '&')
+		.split('\n')
+		.map((line) => line.replace(/[\t ]+/g, ' ').trim())
+		.join('\n')
 		.replace(/\n{3,}/g, '\n\n')
 		.trim();
 }
