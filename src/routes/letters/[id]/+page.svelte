@@ -3,6 +3,9 @@
 	import LocalTime from '$lib/LocalTime.svelte';
 
 	let { data } = $props();
+
+	// 回信按时间升序，编号即楼层号；parent_reply_id 指向同列表里的楼层
+	const floorOf = (replyId: string) => data.replies.findIndex((r) => r.id === replyId) + 1;
 </script>
 
 <svelte:head>
@@ -30,13 +33,26 @@
 {#if data.replies.length > 0}
 	<section class="replies">
 		<h2>回信（{data.replies.length}）</h2>
-		{#each data.replies as reply (reply.id)}
-			<article class="reply">
+		{#each data.replies as reply, i (reply.id)}
+			<article class="reply" id={reply.id}>
+				<p class="meta">
+					#{i + 1}
+					{#if reply.parent_reply_id && floorOf(reply.parent_reply_id) > 0}
+						· 回复 <a href="#{reply.parent_reply_id}">#{floorOf(reply.parent_reply_id)}</a>
+					{/if}
+					· <LocalTime time={reply.published_at ?? reply.created_at} />
+				</p>
 				{#if reply.subject}
 					<h3>{reply.subject}</h3>
 				{/if}
 				<p class="body">{reply.body_text}</p>
-				<LocalTime time={reply.published_at ?? reply.created_at} />
+				{#if reply.reply_token}
+					<p class="meta">
+						回复这条：<a href="mailto:poster+{reply.reply_token}@driftcell.dev"
+							>poster+{reply.reply_token}@driftcell.dev</a
+						>
+					</p>
+				{/if}
 			</article>
 		{/each}
 	</section>
