@@ -10,10 +10,7 @@
 
 <svelte:head>
 	<title>Poster 邮局</title>
-	<meta
-		name="description"
-		content="Poster 邮局 —— 通过电子邮件投稿的公开信箱，来信审核后公开展示。"
-	/>
+	<meta name="description" content="Poster 邮局 —— 通过电子邮件投稿的公开信箱，来信会公开展示。" />
 </svelte:head>
 
 <aside class="cta">
@@ -23,7 +20,7 @@
 			text="poster@driftcell.dev"
 		/>
 	</span>
-	写一封邮件（主题可留空），通过审核后会出现在这里。
+	写一封邮件（主题可留空），它会出现在这里。
 </aside>
 
 {#if data.letters.length === 0}

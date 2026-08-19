@@ -80,7 +80,7 @@
 <details class="reply-box">
 	<summary>回复这封信</summary>
 	<div class="reply-content">
-		<p>发邮件到这个地址，通过审核后会显示在本页：</p>
+		<p>发邮件到这个地址，回信会显示在本页：</p>
 		<p class="address-row">
 			<a class="address" href="mailto:{data.replyAddress}">{data.replyAddress}</a><CopyButton
 				text={data.replyAddress}

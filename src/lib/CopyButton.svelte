@@ -25,11 +25,26 @@
 </script>
 
 <button type="button" class:copied onclick={copy}>
-	{copied ? '已复制' : label}
+	<span class="icon" aria-hidden="true">
+		{#if copied}
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+				<polyline points="20 6 9 17 4 12" />
+			</svg>
+		{:else}
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<rect x="9" y="9" width="13" height="13" rx="2" />
+				<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+			</svg>
+		{/if}
+	</span>
+	{label}
 </button>
 
 <style>
 	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
 		padding: 0.125rem 0.625rem;
 		border: 1px solid #bae6fd;
 		border-radius: 999px;
@@ -41,11 +56,22 @@
 		white-space: nowrap;
 		transition:
 			background-color 0.15s ease,
-			border-color 0.15s ease;
+			border-color 0.15s ease,
+			color 0.15s ease;
 	}
 	button:hover {
 		background: #e0f2fe;
 	}
+	.icon {
+		display: inline-flex;
+		width: 0.8125rem;
+		height: 0.8125rem;
+	}
+	.icon svg {
+		width: 100%;
+		height: 100%;
+	}
+	/* 复制成功只换图标和配色，按钮尺寸不变（文案保持「复制」） */
 	button.copied {
 		border-color: #bbf7d0;
 		background: #f0fdf4;
