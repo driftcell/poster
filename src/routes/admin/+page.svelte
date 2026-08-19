@@ -86,15 +86,17 @@
 	<h2>投递失败（{data.failed.length}）</h2>
 	{#each data.failed as failed (failed.id)}
 		<article class="card row">
+			<header>
+				<p class="meta">{failed.from ?? '?'} → {failed.to ?? '?'}</p>
+				<form method="POST">
+					<input type="hidden" name="id" value={failed.id} />
+					<button type="submit" class="approve" formaction="?/replayFailed">重放</button>
+					<button type="submit" class="delete" formaction="?/deleteFailed">删除</button>
+				</form>
+			</header>
 			<p class="meta">
-				{failed.from ?? '?'} → {failed.to ?? '?'} · <code>{failed.r2Key}</code>
+				<code>{failed.r2Key}</code> · <LocalTime time={failed.failed_at} />
 			</p>
-			<LocalTime time={failed.failed_at} />
-			<form method="POST">
-				<input type="hidden" name="id" value={failed.id} />
-				<button type="submit" class="approve" formaction="?/replayFailed">重放</button>
-				<button type="submit" class="delete" formaction="?/deleteFailed">删除</button>
-			</form>
 		</article>
 	{:else}
 		<p class="empty">没有失败的消息。</p>
@@ -107,15 +109,17 @@
 	<h2>信件（{data.publishedLetters.length}）</h2>
 	{#each data.publishedLetters as letter (letter.id)}
 		<article class="card row">
-			<h3>{letter.subject || '（无主题）'}</h3>
-			{#if letter.review_note}
-				<p class="meta">自动通过 · {letter.review_note}</p>
-			{/if}
-			<LocalTime time={letter.published_at ?? letter.created_at} />
-			<form method="POST">
-				<input type="hidden" name="id" value={letter.id} />
-				<button type="submit" class="delete" formaction="?/deleteLetter">删除</button>
-			</form>
+			<header>
+				<h3>{letter.subject || '（无主题）'}</h3>
+				<form method="POST">
+					<input type="hidden" name="id" value={letter.id} />
+					<button type="submit" class="delete" formaction="?/deleteLetter">删除</button>
+				</form>
+			</header>
+			<p class="meta">
+				{#if letter.review_note}自动通过 · {letter.review_note} ·
+				{/if}<LocalTime time={letter.published_at ?? letter.created_at} />
+			</p>
 		</article>
 	{:else}
 		<p class="empty">没有已发布的信件。</p>
@@ -126,16 +130,18 @@
 	<h2>回信（{data.publishedReplies.length}）</h2>
 	{#each data.publishedReplies as reply (reply.id)}
 		<article class="card row">
-			<h3>{reply.subject || '（无主题）'}</h3>
+			<header>
+				<h3>{reply.subject || '（无主题）'}</h3>
+				<form method="POST">
+					<input type="hidden" name="id" value={reply.id} />
+					<button type="submit" class="delete" formaction="?/deleteReply">删除</button>
+				</form>
+			</header>
 			<p class="meta">
 				回复「{reply.letter_subject || '（无主题）'}」{#if reply.review_note}
 					· 自动通过 · {reply.review_note}{/if}
+				· <LocalTime time={reply.published_at ?? reply.created_at} />
 			</p>
-			<LocalTime time={reply.published_at ?? reply.created_at} />
-			<form method="POST">
-				<input type="hidden" name="id" value={reply.id} />
-				<button type="submit" class="delete" formaction="?/deleteReply">删除</button>
-			</form>
 		</article>
 	{:else}
 		<p class="empty">没有已发布的回信。</p>
@@ -152,20 +158,29 @@
 	}
 	.card {
 		margin: 0 0 1rem;
-		padding: 1rem;
-		border: 1px solid #e5e7eb;
-		border-radius: 0.5rem;
+		padding: 1rem 1.25rem;
+		background: #fff;
+		border: 1px solid #e5e2dc;
+		border-radius: 0.75rem;
 	}
-	.card header,
-	.card.row {
+	.card header {
 		display: flex;
 		justify-content: space-between;
-		align-items: baseline;
+		align-items: flex-start;
 		gap: 1rem;
+	}
+	.row header {
+		align-items: center;
+	}
+	.card header .meta {
+		margin: 0;
 	}
 	.card h3 {
 		margin: 0;
 		font-size: 1rem;
+		line-height: 1.5;
+		/* 标题长时正常换行，不挤压右侧按钮 */
+		min-width: 0;
 	}
 	.card :global(time) {
 		font-size: 0.8125rem;
@@ -173,9 +188,13 @@
 		white-space: nowrap;
 	}
 	.meta {
-		margin: 0.25rem 0;
+		margin: 0.375rem 0 0;
 		font-size: 0.8125rem;
 		color: #6b7280;
+		word-break: break-word;
+	}
+	.card:not(.row) > .meta:first-of-type {
+		margin-top: 0.25rem;
 	}
 	.note {
 		margin: 0.25rem 0;
@@ -196,30 +215,46 @@
 	.thumbs img {
 		max-height: 8rem;
 		border-radius: 0.375rem;
-		border: 1px solid #e5e7eb;
+		border: 1px solid #e5e2dc;
 	}
 	form {
 		display: flex;
 		gap: 0.5rem;
+		flex-shrink: 0;
+	}
+	.card:not(.row) form {
+		margin-top: 0.75rem;
 	}
 	button {
 		padding: 0.375rem 1rem;
-		border: none;
+		border: 1px solid transparent;
 		border-radius: 0.375rem;
 		cursor: pointer;
 		font-size: 0.875rem;
+		white-space: nowrap;
 	}
 	.approve {
 		background: #16a34a;
 		color: #fff;
 	}
+	.approve:hover {
+		background: #15803d;
+	}
 	.reject {
-		background: #f59e0b;
-		color: #fff;
+		background: #fff;
+		border-color: #d4d4d8;
+		color: #52525b;
+	}
+	.reject:hover {
+		background: #f4f4f5;
 	}
 	.delete {
-		background: #dc2626;
-		color: #fff;
+		background: #fff;
+		border-color: #fecaca;
+		color: #dc2626;
+	}
+	.delete:hover {
+		background: #fef2f2;
 	}
 	.empty {
 		color: #9ca3af;
