@@ -11,6 +11,7 @@ export interface Letter {
 	r2_key: string;
 	message_id: string | null;
 	reply_token: string;
+	review_note: string | null;
 	created_at: string;
 	published_at: string | null;
 }
@@ -24,6 +25,7 @@ export interface Reply {
 	body_text: string;
 	r2_key: string;
 	message_id: string | null;
+	review_note: string | null;
 	created_at: string;
 	published_at: string | null;
 }

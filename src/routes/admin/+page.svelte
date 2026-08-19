@@ -21,6 +21,9 @@
 				<LocalTime time={letter.created_at} />
 			</header>
 			<p class="meta">发件人哈希 <code>{shortHash(letter.sender_hash)}</code></p>
+			{#if letter.review_note}
+				<p class="note">AI 审核：{letter.review_note}</p>
+			{/if}
 			<p class="body">{letter.body_text}</p>
 			<form method="POST">
 				<input type="hidden" name="id" value={letter.id} />
@@ -46,6 +49,9 @@
 				回复「{reply.letter_subject || '（无主题）'}」 · 发件人哈希
 				<code>{shortHash(reply.sender_hash)}</code>
 			</p>
+			{#if reply.review_note}
+				<p class="note">AI 审核：{reply.review_note}</p>
+			{/if}
 			<p class="body">{reply.body_text}</p>
 			<form method="POST">
 				<input type="hidden" name="id" value={reply.id} />
@@ -66,6 +72,9 @@
 	{#each data.publishedLetters as letter (letter.id)}
 		<article class="card row">
 			<h3>{letter.subject || '（无主题）'}</h3>
+			{#if letter.review_note}
+				<p class="meta">自动通过 · {letter.review_note}</p>
+			{/if}
 			<LocalTime time={letter.published_at ?? letter.created_at} />
 			<form method="POST">
 				<input type="hidden" name="id" value={letter.id} />
@@ -82,7 +91,10 @@
 	{#each data.publishedReplies as reply (reply.id)}
 		<article class="card row">
 			<h3>{reply.subject || '（无主题）'}</h3>
-			<p class="meta">回复「{reply.letter_subject || '（无主题）'}」</p>
+			<p class="meta">
+				回复「{reply.letter_subject || '（无主题）'}」{#if reply.review_note}
+					· 自动通过 · {reply.review_note}{/if}
+			</p>
 			<LocalTime time={reply.published_at ?? reply.created_at} />
 			<form method="POST">
 				<input type="hidden" name="id" value={reply.id} />
@@ -128,6 +140,11 @@
 		margin: 0.25rem 0;
 		font-size: 0.8125rem;
 		color: #6b7280;
+	}
+	.note {
+		margin: 0.25rem 0;
+		font-size: 0.8125rem;
+		color: #b45309;
 	}
 	.body {
 		white-space: pre-wrap;

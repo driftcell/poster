@@ -1,5 +1,6 @@
 import PostalMime from 'postal-mime';
 import { hashSender, replyTokenFor, stripHtml, type IngestMessage } from './lib';
+import { autoModerate } from './moderate';
 
 /**
  * Queue 消费端：取 R2 原件 → 解析 MIME → 发件人哈希 → 写 D1（pending）。
@@ -32,6 +33,15 @@ async function processMessage(payload: IngestMessage, env: Env): Promise<void> {
 	// Queue 至少一次投递，用 RFC Message-ID 去重（缺失时无法去重，插入即可）
 	const messageId = parsed.messageId ?? null;
 
+	// AI 自动审核：通过则直接发布；不通过或服务异常都留在人工队列
+	const verdict = await autoModerate(env.DEEPSEEK_API_KEY, {
+		from: payload.from,
+		to: payload.to,
+		subject,
+		body: bodyText
+	});
+	const status = verdict.approve ? 'approved' : 'pending';
+
 	if (payload.route.kind === 'reply') {
 		const letter = await env.DB.prepare('SELECT id FROM letters WHERE reply_token = ?1')
 			.bind(payload.route.token)
@@ -42,11 +52,21 @@ async function processMessage(payload: IngestMessage, env: Env): Promise<void> {
 			return;
 		}
 		await env.DB.prepare(
-			`INSERT INTO replies (id, letter_id, sender_hash, subject, body_text, r2_key, message_id)
-			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+			`INSERT INTO replies (id, letter_id, sender_hash, subject, body_text, r2_key, message_id, status, review_note, published_at)
+			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CASE WHEN ?8 = 'approved' THEN datetime('now') ELSE NULL END)
 			 ON CONFLICT (message_id) DO NOTHING`
 		)
-			.bind(crypto.randomUUID(), letter.id, senderHash, subject, bodyText, payload.r2Key, messageId)
+			.bind(
+				crypto.randomUUID(),
+				letter.id,
+				senderHash,
+				subject,
+				bodyText,
+				payload.r2Key,
+				messageId,
+				status,
+				verdict.reason
+			)
 			.run();
 		return;
 	}
@@ -54,10 +74,20 @@ async function processMessage(payload: IngestMessage, env: Env): Promise<void> {
 	const id = crypto.randomUUID();
 	const replyToken = await replyTokenFor(env.HASH_SALT, id);
 	await env.DB.prepare(
-		`INSERT INTO letters (id, sender_hash, subject, body_text, r2_key, message_id, reply_token)
-		 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)
+		`INSERT INTO letters (id, sender_hash, subject, body_text, r2_key, message_id, reply_token, status, review_note, published_at)
+		 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, CASE WHEN ?8 = 'approved' THEN datetime('now') ELSE NULL END)
 		 ON CONFLICT (message_id) DO NOTHING`
 	)
-		.bind(id, senderHash, subject, bodyText, payload.r2Key, messageId, replyToken)
+		.bind(
+			id,
+			senderHash,
+			subject,
+			bodyText,
+			payload.r2Key,
+			messageId,
+			replyToken,
+			status,
+			verdict.reason
+		)
 		.run();
 }
