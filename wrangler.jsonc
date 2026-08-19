@@ -8,5 +8,36 @@
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "poster-db",
+			"database_id": "d71e1529-4457-4960-b625-afbd6e5f8cb5",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "RAW_EMAILS",
+			"bucket_name": "poster-emails"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "EMAIL_QUEUE",
+				"queue": "email-ingest"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "email-ingest",
+				"max_batch_size": 10,
+				"max_batch_timeout": 30,
+				"max_retries": 3,
+				"dead_letter_queue": "email-ingest-dlq"
+			}
+		]
 	}
 }
