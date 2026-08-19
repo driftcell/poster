@@ -15,6 +15,9 @@ const MAX_IMAGE_ATTACHMENTS = 5;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MIN_IMAGE_BYTES = 20 * 1024;
 
+// 每个发件人（按哈希）的每日投递上限，防刷屏
+const DAILY_LIMITS = { letters: 3, replies: 10 } as const;
+
 /**
  * Queue 消费端：取 R2 原件 → 解析 MIME → 存图片附件 → 发件人哈希 → AI 审核 → 写 D1。
  * 单条失败只 retry 单条；Queue 配置的重试次数耗尽后自动进 DLQ。
@@ -59,6 +62,13 @@ async function processMessage(env: Env, payload: IngestMessage): Promise<void> {
 			console.error(`no letter or reply found for token: ${payload.route.token}`);
 			return;
 		}
+	}
+
+	// 限流：超限直接丢弃（原始邮件仍在 R2，可追溯）
+	const table = payload.route.kind === 'reply' ? 'replies' : 'letters';
+	if (await isOverDailyLimit(env, table, senderHash)) {
+		console.warn(`rate limited sender ${senderHash.slice(0, 12)} on ${table}`);
+		return;
 	}
 
 	const id = crypto.randomUUID();
@@ -169,6 +179,20 @@ async function saveImageAttachments(
 		index++;
 	}
 	return metas;
+}
+
+/** 按发件人哈希统计最近 24h 投递量是否超限（表名是内部常量，无注入风险） */
+async function isOverDailyLimit(
+	env: Env,
+	table: keyof typeof DAILY_LIMITS,
+	senderHash: string
+): Promise<boolean> {
+	const row = await env.DB.prepare(
+		`SELECT COUNT(*) AS count FROM ${table} WHERE sender_hash = ?1 AND created_at > datetime('now', '-1 day')`
+	)
+		.bind(senderHash)
+		.first<{ count: number }>();
+	return (row?.count ?? 0) >= DAILY_LIMITS[table];
 }
 
 /** DLQ 消息落库，等人工在后台查看/重放 */
