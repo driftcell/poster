@@ -11,10 +11,10 @@ export async function listPendingLetters(db: D1Database): Promise<Letter[]> {
 	return results;
 }
 
-export type PendingReply = Reply & { letter_subject: string };
+export type ReplyWithLetter = Reply & { letter_subject: string };
 
 /** 待审核回信，带上原信件标题方便对照 */
-export async function listPendingReplies(db: D1Database): Promise<PendingReply[]> {
+export async function listPendingReplies(db: D1Database): Promise<ReplyWithLetter[]> {
 	const { results } = await db
 		.prepare(
 			`SELECT replies.*, letters.subject AS letter_subject
@@ -23,7 +23,21 @@ export async function listPendingReplies(db: D1Database): Promise<PendingReply[]
 			 ORDER BY replies.created_at DESC LIMIT ?1`
 		)
 		.bind(LIST_LIMIT)
-		.all<PendingReply>();
+		.all<ReplyWithLetter>();
+	return results;
+}
+
+/** 已发布回信（管理页用），带原信标题 */
+export async function listPublishedRepliesJoined(db: D1Database): Promise<ReplyWithLetter[]> {
+	const { results } = await db
+		.prepare(
+			`SELECT replies.*, letters.subject AS letter_subject
+			 FROM replies JOIN letters ON letters.id = replies.letter_id
+			 WHERE replies.status = 'approved'
+			 ORDER BY replies.published_at DESC LIMIT ?1`
+		)
+		.bind(LIST_LIMIT)
+		.all<ReplyWithLetter>();
 	return results;
 }
 

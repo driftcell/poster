@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import LocalTime from '$lib/LocalTime.svelte';
 
 	let { data } = $props();
 </script>
@@ -12,7 +13,7 @@
 	<header>
 		<h1>{data.letter.subject || '（无主题）'}</h1>
 		<p class="meta">
-			<time>{data.letter.published_at?.slice(0, 10)}</time>
+			<LocalTime time={data.letter.published_at ?? data.letter.created_at} />
 			· <a href={resolve('/letters/[id]/atom.xml', { id: data.letter.id })}>订阅回信</a>
 		</p>
 	</header>
@@ -35,7 +36,7 @@
 					<h3>{reply.subject}</h3>
 				{/if}
 				<p class="body">{reply.body_text}</p>
-				<time>{reply.published_at?.slice(0, 10)}</time>
+				<LocalTime time={reply.published_at ?? reply.created_at} />
 			</article>
 		{/each}
 	</section>
@@ -74,7 +75,7 @@
 		margin: 0 0 0.5rem;
 		font-size: 1rem;
 	}
-	.reply time {
+	.reply :global(time) {
 		font-size: 0.875rem;
 		color: #9ca3af;
 	}

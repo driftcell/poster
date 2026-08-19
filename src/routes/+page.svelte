@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import LocalTime from '$lib/LocalTime.svelte';
 
 	let { data } = $props();
 
@@ -26,7 +27,7 @@
 				{#if letter.body_text}
 					<p class="excerpt">{excerpt(letter.body_text)}</p>
 				{/if}
-				<time>{letter.published_at?.slice(0, 10)}</time>
+				<LocalTime time={letter.published_at ?? letter.created_at} />
 			</li>
 		{/each}
 	</ul>
@@ -60,7 +61,7 @@
 		margin: 0 0 0.5rem;
 		color: #4b5563;
 	}
-	time {
+	.letters :global(time) {
 		font-size: 0.875rem;
 		color: #9ca3af;
 	}
