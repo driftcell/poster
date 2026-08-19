@@ -64,6 +64,9 @@ ${entriesXml}
 
 export function feedResponse(xml: string): Response {
 	return new Response(xml, {
-		headers: { 'content-type': 'application/atom+xml; charset=utf-8' }
+		headers: {
+			'content-type': 'application/atom+xml; charset=utf-8',
+			'cache-control': 'public, max-age=300'
+		}
 	});
 }

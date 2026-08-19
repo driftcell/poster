@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import LocalTime from '$lib/LocalTime.svelte';
+	import { excerpt } from '$lib/text';
 
 	let { data } = $props();
-
-	const excerpt = (text: string) => (text.length > 160 ? text.slice(0, 160) + '…' : text);
 </script>
 
 <svelte:head>
 	<title>Poster 邮局</title>
+	<meta
+		name="description"
+		content="Poster 邮局 —— 通过电子邮件投稿的公开信箱，来信审核后公开展示。"
+	/>
 </svelte:head>
 
 <aside class="cta">

@@ -100,3 +100,12 @@ export async function listPublishedReplies(db: D1Database, letterId: string): Pr
 		.all<Reply>();
 	return results;
 }
+
+/** 查回信所属的信件 id（缓存清除用） */
+export async function getReplyLetterId(db: D1Database, id: string): Promise<string | null> {
+	const row = await db
+		.prepare('SELECT letter_id FROM replies WHERE id = ?1')
+		.bind(id)
+		.first<{ letter_id: string }>();
+	return row?.letter_id ?? null;
+}

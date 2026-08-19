@@ -1,5 +1,7 @@
 import { error, fail } from '@sveltejs/kit';
+import { purgePublicCache } from '$lib/server/cache';
 import {
+	getReplyLetterId,
 	listPendingLetters,
 	listPendingReplies,
 	listPublishedLetters,
@@ -52,12 +54,24 @@ async function deleteReplyDeep(env: Env, id: string): Promise<void> {
 	await env.DB.prepare('DELETE FROM replies WHERE id = ?1').bind(id).run();
 }
 
+/** 信件公开内容变更后，清除相关页面的边缘缓存 */
+async function purgeLetterPaths(platform: App.Platform, origin: string, letterId: string) {
+	await purgePublicCache(platform, origin, [
+		'/',
+		'/atom.xml',
+		'/sitemap.xml',
+		`/letters/${letterId}`,
+		`/letters/${letterId}/atom.xml`
+	]);
+}
+
 export const actions: Actions = {
-	approveLetter: async ({ request, platform }) => {
+	approveLetter: async ({ request, platform, url }) => {
 		if (!platform) error(500, '平台不可用');
 		const id = getId(await request.formData());
 		if (!id) return fail(400, { error: 'missing id' });
 		await moderateLetter(platform.env.DB, id, 'approved');
+		await purgeLetterPaths(platform, url.origin, id);
 	},
 	rejectLetter: async ({ request, platform }) => {
 		if (!platform) error(500, '平台不可用');
@@ -65,11 +79,13 @@ export const actions: Actions = {
 		if (!id) return fail(400, { error: 'missing id' });
 		await moderateLetter(platform.env.DB, id, 'rejected');
 	},
-	approveReply: async ({ request, platform }) => {
+	approveReply: async ({ request, platform, url }) => {
 		if (!platform) error(500, '平台不可用');
 		const id = getId(await request.formData());
 		if (!id) return fail(400, { error: 'missing id' });
 		await moderateReply(platform.env.DB, id, 'approved');
+		const letterId = await getReplyLetterId(platform.env.DB, id);
+		if (letterId) await purgeLetterPaths(platform, url.origin, letterId);
 	},
 	rejectReply: async ({ request, platform }) => {
 		if (!platform) error(500, '平台不可用');
@@ -77,16 +93,19 @@ export const actions: Actions = {
 		if (!id) return fail(400, { error: 'missing id' });
 		await moderateReply(platform.env.DB, id, 'rejected');
 	},
-	deleteLetter: async ({ request, platform }) => {
+	deleteLetter: async ({ request, platform, url }) => {
 		if (!platform) error(500, '平台不可用');
 		const id = getId(await request.formData());
 		if (!id) return fail(400, { error: 'missing id' });
 		await deleteLetterDeep(platform.env, id);
+		await purgeLetterPaths(platform, url.origin, id);
 	},
-	deleteReply: async ({ request, platform }) => {
+	deleteReply: async ({ request, platform, url }) => {
 		if (!platform) error(500, '平台不可用');
 		const id = getId(await request.formData());
 		if (!id) return fail(400, { error: 'missing id' });
+		const letterId = await getReplyLetterId(platform.env.DB, id);
 		await deleteReplyDeep(platform.env, id);
+		if (letterId) await purgeLetterPaths(platform, url.origin, letterId);
 	}
 };
