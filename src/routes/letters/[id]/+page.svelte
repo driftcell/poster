@@ -38,6 +38,12 @@
 	<meta property="og:description" content={description} />
 	<meta property="og:url" content={page.url.href} />
 	<meta property="article:published_time" content={publishedIso} />
+	<link
+		rel="alternate"
+		type="application/atom+xml"
+		title={`回信 · ${title}`}
+		href={resolve('/letters/[id]/atom.xml', { id: data.letter.id })}
+	/>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- 内容来自 JSON.stringify 且 < 已转义，安全 -->
 	{@html jsonLdTag}
 </svelte:head>

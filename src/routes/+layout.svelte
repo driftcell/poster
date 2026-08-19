@@ -7,6 +7,12 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<link
+		rel="alternate"
+		type="application/atom+xml"
+		title="Poster 邮局"
+		href={resolve('/atom.xml')}
+	/>
 </svelte:head>
 
 <div class="container">

@@ -37,11 +37,12 @@ SvelteKit 2 + Svelte 5 · @sveltejs/adapter-cloudflare · Cloudflare Workers / D
 ## 目录结构
 
 ```
-src/routes/          站点页面（首页、信件详情、/admin 审核后台、atom.xml、sitemap.xml）
+src/routes/          站点页面（首页、信件详情、/admin 审核后台、atom.xml、sitemap.xml、附件服务）
 src/lib/server/      D1 查询、Atom 生成、缓存清除
-src/lib/             共享类型与工具
+src/lib/             共享类型与工具（假名、文本、时间）
 worker/              自定义 Worker 入口（包装 adapter 产物，追加 email/queue handler）
 migrations/          D1 数据库迁移
+tests/               Vitest 单元测试
 ```
 
 ## 开发
@@ -51,7 +52,10 @@ pnpm install
 pnpm dev          # vite dev，platformProxy 本地模拟 D1/R2/Queue
 pnpm check        # svelte-kit sync + svelte-check
 pnpm lint         # prettier + eslint
+pnpm test         # vitest
 ```
+
+push 到 GitHub 后：Actions 跑 check/lint/test/build，Cloudflare Workers Builds 自动部署。
 
 本地密钥放 `.dev.vars`（已 gitignore）。
 
