@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import LocalTime from '$lib/LocalTime.svelte';
 	import { d1ToIso, excerpt } from '$lib/text';
+	import { pseudonymFor } from '$lib/pseudonym';
 
 	let { data } = $props();
 
@@ -45,6 +46,7 @@
 	<header>
 		<h1>{data.letter.subject || '（无主题）'}</h1>
 		<p class="meta">
+			{pseudonymFor(data.letter.sender_hash)} ·
 			<LocalTime time={data.letter.published_at ?? data.letter.created_at} />
 			· <a href={resolve('/letters/[id]/atom.xml', { id: data.letter.id })}>订阅回信</a>
 		</p>
@@ -65,7 +67,7 @@
 		{#each data.replies as reply, i (reply.id)}
 			<article class="reply" id={reply.id}>
 				<p class="meta">
-					#{i + 1}
+					#{i + 1} · {pseudonymFor(reply.sender_hash)}
 					{#if reply.parent_reply_id && floorOf(reply.parent_reply_id) > 0}
 						· 回复 <a href="#{reply.parent_reply_id}">#{floorOf(reply.parent_reply_id)}</a>
 					{/if}

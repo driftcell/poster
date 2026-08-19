@@ -1,5 +1,6 @@
 <script lang="ts">
 	import LocalTime from '$lib/LocalTime.svelte';
+	import { pseudonymFor } from '$lib/pseudonym';
 
 	let { data } = $props();
 
@@ -20,7 +21,9 @@
 				<h3>{letter.subject || '（无主题）'}</h3>
 				<LocalTime time={letter.created_at} />
 			</header>
-			<p class="meta">发件人哈希 <code>{shortHash(letter.sender_hash)}</code></p>
+			<p class="meta">
+				{pseudonymFor(letter.sender_hash)} <code>{shortHash(letter.sender_hash)}</code>
+			</p>
 			{#if letter.review_note}
 				<p class="note">AI 审核：{letter.review_note}</p>
 			{/if}
@@ -46,7 +49,7 @@
 				<LocalTime time={reply.created_at} />
 			</header>
 			<p class="meta">
-				回复「{reply.letter_subject || '（无主题）'}」 · 发件人哈希
+				回复「{reply.letter_subject || '（无主题）'}」 · {pseudonymFor(reply.sender_hash)}
 				<code>{shortHash(reply.sender_hash)}</code>
 			</p>
 			{#if reply.review_note}

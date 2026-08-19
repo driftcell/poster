@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import LocalTime from '$lib/LocalTime.svelte';
+	import { pseudonymFor } from '$lib/pseudonym';
 	import { excerpt } from '$lib/text';
 
 	let { data } = $props();
@@ -30,7 +31,10 @@
 				{#if letter.body_text}
 					<p class="excerpt">{excerpt(letter.body_text)}</p>
 				{/if}
-				<LocalTime time={letter.published_at ?? letter.created_at} />
+				<p class="byline">
+					<span class="author">{pseudonymFor(letter.sender_hash)}</span> ·
+					<LocalTime time={letter.published_at ?? letter.created_at} />
+				</p>
 			</li>
 		{/each}
 	</ul>
@@ -67,6 +71,14 @@
 	.letters :global(time) {
 		font-size: 0.875rem;
 		color: #9ca3af;
+	}
+	.byline {
+		margin: 0;
+		font-size: 0.875rem;
+		color: #9ca3af;
+	}
+	.author {
+		color: #6b7280;
 	}
 	.cta {
 		margin: 0 0 1.5rem;
