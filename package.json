@@ -4,7 +4,10 @@
 	"version": "0.0.1",
 	"type": "module",
 	"pnpm": {
-		"onlyBuiltDependencies": ["esbuild", "workerd"]
+		"onlyBuiltDependencies": [
+			"esbuild",
+			"workerd"
+		]
 	},
 	"scripts": {
 		"dev": "vite dev",
@@ -14,6 +17,7 @@
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"test": "vitest run",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
@@ -36,6 +40,7 @@
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.1",
 		"vite": "^8.0.16",
+		"vitest": "^4.1.11",
 		"wrangler": "^4.124.0"
 	}
 }

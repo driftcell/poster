@@ -11,7 +11,10 @@ export const load: PageServerLoad = async ({ params, platform, setHeaders }) => 
 	const replies = await listPublishedReplies(platform.env.DB, letter.id);
 	return {
 		letter: { ...letter, attachments: parseAttachments(letter.attachments) },
-		replies: replies.map((reply) => ({ ...reply, attachments: parseAttachments(reply.attachments) })),
+		replies: replies.map((reply) => ({
+			...reply,
+			attachments: parseAttachments(reply.attachments)
+		})),
 		replyAddress: `poster+${letter.reply_token}@driftcell.dev`
 	};
 };

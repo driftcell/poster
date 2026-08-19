@@ -53,7 +53,9 @@ async function deleteLetterDeep(env: Env, id: string): Promise<void> {
 		.bind(id)
 		.first<{ r2_key: string; attachments: string }>();
 	if (!letter) return;
-	const replies = await env.DB.prepare('SELECT r2_key, attachments FROM replies WHERE letter_id = ?1')
+	const replies = await env.DB.prepare(
+		'SELECT r2_key, attachments FROM replies WHERE letter_id = ?1'
+	)
 		.bind(id)
 		.all<{ r2_key: string; attachments: string }>();
 	const keys = [letter, ...replies.results].flatMap(r2KeysOf);

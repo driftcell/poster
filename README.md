@@ -64,9 +64,9 @@ pnpm run deploy   # wrangler deploy（注意是 pnpm run deploy，pnpm deploy �
 
 仓库里有两个 wrangler 配置，职责不同：
 
-| 文件 | 用途 |
-|---|---|
-| `wrangler.jsonc` | 部署/开发用：`main = worker/index.ts`，含 D1/R2/Queue 全部绑定 |
+| 文件                     | 用途                                                                                                |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| `wrangler.jsonc`         | 部署/开发用：`main = worker/index.ts`，含 D1/R2/Queue 全部绑定                                      |
 | `wrangler.adapter.jsonc` | 仅构建时给 adapter 用（adapter 会覆盖其 `main` 指向的文件，即 `.svelte-kit/cloudflare/_worker.js`） |
 
 生产 secrets 通过 `wrangler secret put` 设置：`HASH_SALT`（发件人哈希盐）、`ADMIN_EMAIL`（Access 白名单）、`DEEPSEEK_API_KEY`。

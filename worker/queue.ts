@@ -1,12 +1,6 @@
 import PostalMime from 'postal-mime';
 import type { Attachment } from 'postal-mime';
-import {
-	hashSender,
-	replyTokenFor,
-	sanitizeFilename,
-	stripHtml,
-	type IngestMessage
-} from './lib';
+import { hashSender, replyTokenFor, sanitizeFilename, stripHtml, type IngestMessage } from './lib';
 import { autoModerate } from './moderate';
 import type { AttachmentMeta } from '../src/lib/types';
 
@@ -80,7 +74,10 @@ async function processMessage(env: Env, payload: IngestMessage): Promise<void> {
 		from: payload.from,
 		to: payload.to,
 		subject,
-		body: attachments.length > 0 ? `${bodyText}\n（本邮件含 ${attachments.length} 张图片附件）` : bodyText
+		body:
+			attachments.length > 0
+				? `${bodyText}\n（本邮件含 ${attachments.length} 张图片附件）`
+				: bodyText
 	});
 	const status = verdict.approve ? 'approved' : 'pending';
 
