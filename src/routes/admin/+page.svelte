@@ -82,6 +82,25 @@
 	{/each}
 </section>
 
+<section>
+	<h2>投递失败（{data.failed.length}）</h2>
+	{#each data.failed as failed (failed.id)}
+		<article class="card row">
+			<p class="meta">
+				{failed.from ?? '?'} → {failed.to ?? '?'} · <code>{failed.r2Key}</code>
+			</p>
+			<LocalTime time={failed.failed_at} />
+			<form method="POST">
+				<input type="hidden" name="id" value={failed.id} />
+				<button type="submit" class="approve" formaction="?/replayFailed">重放</button>
+				<button type="submit" class="delete" formaction="?/deleteFailed">删除</button>
+			</form>
+		</article>
+	{:else}
+		<p class="empty">没有失败的消息。</p>
+	{/each}
+</section>
+
 <h1>已发布</h1>
 
 <section>

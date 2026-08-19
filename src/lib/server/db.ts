@@ -109,3 +109,25 @@ export async function getReplyLetterId(db: D1Database, id: string): Promise<stri
 		.first<{ letter_id: string }>();
 	return row?.letter_id ?? null;
 }
+
+export interface FailedIngest {
+	id: string;
+	payload: string;
+	failed_at: string;
+}
+
+/** 投递失败（DLQ 落库）的消息 */
+export async function listFailedIngest(db: D1Database): Promise<FailedIngest[]> {
+	const { results } = await db
+		.prepare('SELECT * FROM failed_ingest ORDER BY failed_at DESC LIMIT 100')
+		.all<FailedIngest>();
+	return results;
+}
+
+export async function getFailedIngest(db: D1Database, id: string): Promise<FailedIngest | null> {
+	return db.prepare('SELECT * FROM failed_ingest WHERE id = ?1').bind(id).first<FailedIngest>();
+}
+
+export async function deleteFailedIngest(db: D1Database, id: string): Promise<void> {
+	await db.prepare('DELETE FROM failed_ingest WHERE id = ?1').bind(id).run();
+}

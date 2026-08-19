@@ -2,7 +2,10 @@ import { error, fail } from '@sveltejs/kit';
 import { purgePublicCache } from '$lib/server/cache';
 import { parseAttachments } from '$lib/types';
 import {
+	deleteFailedIngest,
+	getFailedIngest,
 	getReplyLetterId,
+	listFailedIngest,
 	listPendingLetters,
 	listPendingReplies,
 	listPublishedLetters,
@@ -15,13 +18,23 @@ import type { Actions, PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ platform }) => {
 	if (!platform) error(500, '平台不可用');
 	const db = platform.env.DB;
-	const [letters, replies, publishedLetters, publishedReplies] = await Promise.all([
+	const [letters, replies, publishedLetters, publishedReplies, failed] = await Promise.all([
 		listPendingLetters(db),
 		listPendingReplies(db),
 		listPublishedLetters(db),
-		listPublishedRepliesJoined(db)
+		listPublishedRepliesJoined(db),
+		listFailedIngest(db)
 	]);
-	return { letters, replies, publishedLetters, publishedReplies };
+	return {
+		letters,
+		replies,
+		publishedLetters,
+		publishedReplies,
+		failed: failed.map((f) => {
+			const payload = JSON.parse(f.payload) as { from?: string; to?: string; r2Key?: string };
+			return { id: f.id, failed_at: f.failed_at, ...payload };
+		})
+	};
 };
 
 function getId(formData: FormData): string | null {
@@ -114,5 +127,21 @@ export const actions: Actions = {
 		const letterId = await getReplyLetterId(platform.env.DB, id);
 		await deleteReplyDeep(platform.env, id);
 		if (letterId) await purgeLetterPaths(platform, url.origin, letterId);
+	},
+	replayFailed: async ({ request, platform }) => {
+		if (!platform) error(500, '平台不可用');
+		const id = getId(await request.formData());
+		if (!id) return fail(400, { error: 'missing id' });
+		const failed = await getFailedIngest(platform.env.DB, id);
+		if (!failed) return fail(404, { error: 'not found' });
+		// 重新投递会走完整处理流程（解析/审核），消息本身原样回队列
+		await platform.env.EMAIL_QUEUE.send(JSON.parse(failed.payload));
+		await deleteFailedIngest(platform.env.DB, id);
+	},
+	deleteFailed: async ({ request, platform }) => {
+		if (!platform) error(500, '平台不可用');
+		const id = getId(await request.formData());
+		if (!id) return fail(400, { error: 'missing id' });
+		await deleteFailedIngest(platform.env.DB, id);
 	}
 };

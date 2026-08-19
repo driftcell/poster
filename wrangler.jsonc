@@ -54,6 +54,12 @@
 				"max_batch_timeout": 30,
 				"max_retries": 3,
 				"dead_letter_queue": "email-ingest-dlq"
+			},
+			{
+				"queue": "email-ingest-dlq",
+				"max_batch_size": 10,
+				"max_batch_timeout": 30,
+				"max_retries": 2
 			}
 		]
 	}
