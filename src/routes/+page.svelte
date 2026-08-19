@@ -10,10 +10,12 @@
 	<title>Poster 邮局</title>
 </svelte:head>
 
+<aside class="cta">
+	给 <a href="mailto:poster@driftcell.dev">poster@driftcell.dev</a> 写一封邮件，通过审核后会出现在这里。
+</aside>
+
 {#if data.letters.length === 0}
-	<p class="empty">
-		还没有公开的信件。给 <a href="mailto:poster@driftcell.dev">poster@driftcell.dev</a> 写一封吧。
-	</p>
+	<p class="empty">还没有公开的信件。</p>
 {:else}
 	<ul class="letters">
 		{#each data.letters as letter (letter.id)}
@@ -61,6 +63,14 @@
 	time {
 		font-size: 0.875rem;
 		color: #9ca3af;
+	}
+	.cta {
+		margin: 0 0 1.5rem;
+		padding: 0.875rem 1rem;
+		background: #f0f9ff;
+		border: 1px solid #bae6fd;
+		border-radius: 0.5rem;
+		font-size: 0.9375rem;
 	}
 	.empty {
 		color: #6b7280;
