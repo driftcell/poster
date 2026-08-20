@@ -22,11 +22,6 @@
 	/>
 </svelte:head>
 
-<aside class="notice">
-	这些邮件正在排队等待审核，通过后会完整公开。未经审核的内容尚未甄别，标题与正文以 █
-	遮蔽，只保留形状和字数。
-</aside>
-
 <section>
 	<h1>待审信件（{data.letters.length}）</h1>
 	{#each data.letters as letter (letter.id)}
@@ -76,15 +71,6 @@
 </section>
 
 <style>
-	.notice {
-		margin: 0 0 1.5rem;
-		padding: 0.875rem 1.25rem;
-		background: #fffbeb;
-		border: 1px dashed #fcd34d;
-		border-radius: 0.75rem;
-		font-size: 0.9375rem;
-		color: #78350f;
-	}
 	section + section {
 		margin-top: 2rem;
 	}
