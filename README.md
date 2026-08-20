@@ -27,6 +27,7 @@
 - **email() handler 只做毫秒级操作**（存 R2、投 Queue）：email 事件没有重试，失败即退信，重活全部异步
 - **Queue 消费端**：重试 3 次后进死信队列；用 RFC Message-ID 去重
 - **AI 审核**（deepseek-v4-flash）：只自动通过、永不自动拒绝；API 异常回退人工
+- **公开待审核区**（`/pending`）：排队中的信件/回信对外可见，标题与正文在服务端打码（`redact`，只留标点和形状），原文不下发
 - **回信**：信件和每条回信都有 `poster+<token>@` 地址（token = HMAC(id, salt)），支持回复回信（楼层引用）
 - **SEO**：sitemap.xml、OG/JSON-LD、公开页面 `cache-control` 触发边缘缓存（adapter 内置 Cache API），审核动作主动清缓存
 
@@ -37,7 +38,7 @@ SvelteKit 2 + Svelte 5 · @sveltejs/adapter-cloudflare · Cloudflare Workers / D
 ## 目录结构
 
 ```
-src/routes/          站点页面（首页、信件详情、/admin 审核后台、atom.xml、sitemap.xml、附件服务）
+src/routes/          站点页面（首页、信件详情、/pending 公开待审核区、/admin 审核后台、atom.xml、sitemap.xml、附件服务）
 src/lib/server/      D1 查询、Atom 生成、缓存清除
 src/lib/             共享类型与工具（假名、文本、时间）
 worker/              自定义 Worker 入口（包装 adapter 产物，追加 email/queue handler）

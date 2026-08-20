@@ -19,6 +19,7 @@
 	<header class="site-header">
 		<a class="brand" href={resolve('/')}>Poster 邮局</a>
 		<nav>
+			<a href={resolve('/pending')}>待审核</a>
 			<a href={resolve('/atom.xml')}>订阅</a>
 		</nav>
 	</header>
@@ -82,6 +83,10 @@
 		font-weight: 700;
 		text-decoration: none;
 		color: inherit;
+	}
+	.site-header nav {
+		display: flex;
+		gap: 1rem;
 	}
 	.site-header nav a {
 		color: #6b7280;

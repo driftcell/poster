@@ -27,6 +27,23 @@ export async function listPendingReplies(db: D1Database): Promise<ReplyWithLette
 	return results;
 }
 
+/**
+ * 公开待审核区域用的待审回信：只取原信件已发布的回信，
+ * 这样原信标题是已公开信息，可以原样展示（回信内容仍需打码）
+ */
+export async function listPublicPendingReplies(db: D1Database): Promise<ReplyWithLetter[]> {
+	const { results } = await db
+		.prepare(
+			`SELECT replies.*, letters.subject AS letter_subject
+			 FROM replies JOIN letters ON letters.id = replies.letter_id
+			 WHERE replies.status = 'pending' AND letters.status = 'approved'
+			 ORDER BY replies.created_at DESC LIMIT ?1`
+		)
+		.bind(LIST_LIMIT)
+		.all<ReplyWithLetter>();
+	return results;
+}
+
 /** 已发布回信（管理页用），带原信标题 */
 export async function listPublishedRepliesJoined(db: D1Database): Promise<ReplyWithLetter[]> {
 	const { results } = await db
